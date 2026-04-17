@@ -116,6 +116,14 @@ st.markdown("---")
 
 if st.button("Explain Like I'm 5 yr old kid"):
     if content:
-        st.info("This topic in simple words:\n\n" + content[:200] + "...")
+        words = content.split()
 
-st.markdown("---")
+        simple_explanation = (
+            "Imagine this like a simple story:\n\n"
+            "Something takes input, does some work, and gives a result.\n\n"
+            "In easy words:\n"
+            + " ".join(words[:25]) +
+            "... but in a much simpler way"
+        )
+
+        st.info(simple_explanation)
