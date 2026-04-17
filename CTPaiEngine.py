@@ -1,11 +1,26 @@
 import streamlit as st
 import PyPDF2
 import matplotlib.pyplot as plt
+import requests
+import time
+from streamlit_lottie import st_lottie
 
 st.set_page_config(page_title="AI Learning Engine", layout="wide")
 
+
+def load_lottie(url):
+    r = requests.get(url)
+    if r.status_code != 200:
+        return None
+    return r.json()
+
+lottie_study = load_lottie("https://assets10.lottiefiles.com/packages/lf20_kyu7xb1v.json")
+lottie_success = load_lottie("https://assets10.lottiefiles.com/packages/lf20_jbrw3hcz.json")
+
 st.title("AI Personalized Learning Engine")
-st.write("Upload notes or PDFs → Get quizzes → Improve with adaptive learning")
+st.caption("AI-powered adaptive learning system for smarter studying")
+
+st_lottie(lottie_study, height=200)
 
 if "questions" not in st.session_state:
     st.session_state.questions = []
@@ -31,38 +46,36 @@ if uploaded_file:
 def generate_questions(text, level):
     text = text.lower()
 
-    base_questions = [
+    questions = [
         "What is the main idea of the topic?",
         "Explain the concept in your own words.",
         "Why is this topic important?",
     ]
 
-    if "process" in text or "steps" in text:
-        base_questions.append("Describe the steps involved in this process.")
-
-    if "define" in text or "is" in text:
-        base_questions.append("Define the key term mentioned.")
+    if "process" in text:
+        questions.append("Describe the steps involved in this process.")
 
     if level == "easy":
-        base_questions.append("Give a simple example of this concept.")
-
+        questions.append("Give a simple example.")
     elif level == "hard":
-        base_questions.extend([
-            "What are the limitations of this concept?",
-            "Apply this concept to a real-world scenario."
+        questions.extend([
+            "What are limitations of this concept?",
+            "Apply this in real life."
         ])
 
-    base_questions.append("Explain this topic like I'm 5 years old.")
+    questions.append("Explain this like I'm 5 years old.")
 
-    return base_questions
+    return questions
 
 if st.button("Generate Questions"):
     if content.strip() == "":
         st.warning("Please enter or upload content!")
     else:
-        st.session_state.questions = generate_questions(content, st.session_state.level)
-        st.session_state.answers = {}
-        st.session_state.score = None
+        with st.spinner("Generating questions..."):
+            time.sleep(1.5)
+            st.session_state.questions = generate_questions(content, st.session_state.level)
+            st.session_state.answers = {}
+            st.session_state.score = None
 
 if st.session_state.questions:
     st.subheader(f"Questions (Level: {st.session_state.level.upper()})")
@@ -84,12 +97,14 @@ if st.session_state.score is not None:
     total = len(st.session_state.questions)
     st.success(f"Score: {st.session_state.score} / {total}")
 
+    st_lottie(lottie_success, height=150)
+
     if st.session_state.score <= 2:
         st.session_state.level = "easy"
-        st.warning("Weak → Switching to EASY level")
+        st.warning("Switching to EASY level")
     elif st.session_state.score == total:
         st.session_state.level = "hard"
-        st.info("Strong → Switching to HARD level")
+        st.info("Switching to HARD level")
     else:
         st.session_state.level = "medium"
         st.info("Staying at MEDIUM level")
@@ -114,16 +129,17 @@ else:
 
 st.markdown("---")
 
-if st.button("Explain Like I'm 5 yr old kid"):
+if st.button("Explain Like I'm 5yr old kid"):
     if content:
-        words = content.split()
+        text = content.lower()
 
-        simple_explanation = (
-            "Imagine this like a simple story:\n\n"
-            "Something takes input, does some work, and gives a result.\n\n"
-            "In easy words:\n"
-            + " ".join(words[:25]) +
-            "... but in a much simpler way"
-        )
+        if "photosynthesis" in text:
+            explanation = "Plants use sunlight to make food and give us oxygen."
+        elif "machine learning" in text:
+            explanation = "A computer learns from examples and gets better."
+        else:
+            explanation = "This is a simple idea about how something works."
 
-        st.info(simple_explanation)
+        st.success(explanation)
+
+st.markdown("---")
